@@ -1,0 +1,39 @@
+teleportenabled: true
+teleportauto: false
+godmode: false
+flymode: false
+muted: false
+jailed: false
+ip-address: 127.0.0.1
+afk: false
+socialspy: false
+npc: false
+powertoolsenabled: true
+accepting-pay: true
+baltop-exempt: false
+timestamps:
+  lastteleport: 1789326626449
+  lastheal: 0
+  mute: 0
+  jail: 0
+  onlinejail: 0
+  logout: 1789368646999
+  login: 1789368633057
+money: '0'
+last-account-name: olivertordenn
+logoutlocation:
+  world: 0fcc960f-f2da-44b5-ad97-e213e44a6f01
+  world-name: Xx_DragonSlayer12_xX
+  x: 127.13325873463614
+  y: 66.0
+  z: -112.36607377953041
+  yaw: -86.39984130859375
+  pitch: 10.34998893737793
+lastlocation:
+  world: 0fcc960f-f2da-44b5-ad97-e213e44a6f01
+  world-name: Xx_DragonSlayer12_xX
+  x: 127.5
+  y: 66.0
+  z: -113.7951458020699
+  yaw: 0.0
+  pitch: 0.0

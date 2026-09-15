@@ -1,0 +1,26 @@
+# TangenStats - innstillinger
+tree-fall:
+  # Netherite-øks feller hele treet ved å bryte én blokk.
+  # Snik (shift) mens du hakker = vanlig enkelt-brudd.
+  enabled: true
+safe-zone:
+  enabled: true
+  chunk-width: 2
+holograms:
+- world: Xx_DragonSlayer12_xX
+  x: 132.29160575461725
+  y: 66.0
+  z: -112.48095187591161
+  id: holo1
+  lines:
+  - '&fVelkommen til tangen sin egene minecraft server informasjon finner du med /help
+    eller se på di andre hologrammene'
+- world: Xx_DragonSlayer12_xX
+  x: 127.60761359959882
+  y: 66.0
+  z: -107.96522378533383
+  id: holo2
+  lines:
+  - '&f/rtp = random teleport /sethome "navnet" = hjemmet ditt /topp og /stats = leaderboard
+    tpa tp = teleporter til noen /spawn = komme tilbake til spawn dette er di viktigste
+    kommandoene resten finner du med /help'

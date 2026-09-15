@@ -1,0 +1,70 @@
+{
+  "stats": {
+    "minecraft:killed_by": {
+      "minecraft:zombie_villager": 1,
+      "minecraft:pillager": 1,
+      "minecraft:zombie": 1
+    },
+    "minecraft:used": {
+      "minecraft:diamond_block": 9,
+      "minecraft:grass_block": 3,
+      "minecraft:polished_deepslate_slab": 161,
+      "minecraft:polished_deepslate_stairs": 20,
+      "minecraft:diamond_axe": 1,
+      "minecraft:shroomlight": 57,
+      "minecraft:polished_deepslate": 1736,
+      "minecraft:netherite_axe": 2,
+      "minecraft:dark_oak_log": 1,
+      "minecraft:armor_stand": 6
+    },
+    "minecraft:picked_up": {
+      "minecraft:polished_deepslate": 1,
+      "minecraft:dirt": 1,
+      "minecraft:grass_block": 1,
+      "minecraft:sand": 8,
+      "minecraft:rotten_flesh": 3,
+      "minecraft:dark_oak_log": 15
+    },
+    "minecraft:killed": {
+      "minecraft:zombie_villager": 1
+    },
+    "minecraft:dropped": {
+      "minecraft:rotten_flesh": 2,
+      "minecraft:polished_deepslate": 1,
+      "minecraft:grass_block": 1,
+      "minecraft:dirt": 1
+    },
+    "minecraft:mined": {
+      "minecraft:short_grass": 2,
+      "minecraft:tall_grass": 1,
+      "minecraft:sand": 1,
+      "minecraft:dark_oak_log": 1,
+      "minecraft:grass_block": 1,
+      "minecraft:dark_oak_planks": 1,
+      "minecraft:glow_lichen": 1
+    },
+    "minecraft:custom": {
+      "minecraft:time_since_rest": 53875,
+      "minecraft:walk_one_cm": 69264,
+      "minecraft:leave_game": 31,
+      "minecraft:walk_under_water_one_cm": 383,
+      "minecraft:mob_kills": 1,
+      "minecraft:damage_taken": 930,
+      "minecraft:play_time": 218964,
+      "minecraft:damage_dealt": 192,
+      "minecraft:jump": 294,
+      "minecraft:time_since_death": 53855,
+      "minecraft:drop": 5,
+      "minecraft:sprint_one_cm": 69458,
+      "minecraft:open_chest": 1,
+      "minecraft:fall_one_cm": 4705,
+      "minecraft:total_world_time": 218964,
+      "minecraft:fly_one_cm": 203540,
+      "minecraft:walk_on_water_one_cm": 1851,
+      "minecraft:crouch_one_cm": 272,
+      "minecraft:sneak_time": 1121,
+      "minecraft:deaths": 5
+    }
+  },
+  "DataVersion": 4903
+}

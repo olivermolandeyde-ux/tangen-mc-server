@@ -1,0 +1,29 @@
+name: TangenStats
+version: 1.0
+main: no.tangen.stats.TangenStats
+api-version: 1.20
+depend: [LuckPerms]
+description: Sidepanel med draft/dødsfall-statistikk, toppliste og roller (owner/laerer/mod/elev).
+commands:
+  topp:
+    description: Viser topplista - flest drap
+    usage: /topp [antall]
+  stats:
+    description: Viser dine stats
+    usage: /stats
+  role:
+    description: Vis eller endre rolle
+    usage: /role [give <spiller> <owner|laerer|mod|elev>]
+  sone:
+    description: Viser grensa for spawn-sonen med partikler
+    usage: /sone
+  rtp:
+    description: Teleporterer deg til et tilfeldig sted
+    usage: /rtp
+  spawn:
+    description: Teleporterer deg tilbake til spawn
+    usage: /spawn
+  hologram:
+    description: Lag og styr hologrammer
+    usage: /holo add <tekst> | addline <id> <tekst> | setline <id> <nr> <tekst> | removeline <id> <nr> | move <id> | remove <id> | list | clear
+    aliases: [holo]

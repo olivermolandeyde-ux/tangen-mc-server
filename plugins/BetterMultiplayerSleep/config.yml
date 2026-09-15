@@ -1,0 +1,4 @@
+# The default percentage of players who need to sleep to skip to day
+default-sleep-percent: 0
+# The color of the messages from the plugin (Using minecraft format codes see https://minecraft.wiki/w/Formatting_codes, Use & instead of §)
+message-color: "&6"

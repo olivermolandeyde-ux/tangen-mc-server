@@ -1,0 +1,14 @@
+# TangenStats - innstillinger
+tree-fall:
+  # Netherite-øks feller hele treet ved å bryte én blokk.
+  # Snik (shift) mens du hakker = vanlig enkelt-brudd.
+  enabled: true
+
+safe-zone:
+  # Trygg sone på 4 chunks (2x2) rundt spawn:
+  # ingen mobs, ingen PvP/drap, ingen sult, ingen falldamage,
+  # ingen bygging/blokkendringer/eksplosjoner.
+  # /sone viser grensa med partikler.
+  enabled: true
+  # Antall chunks per side (2 = 2x2 chunks = 4 chunks totalt)
+  chunk-width: 2

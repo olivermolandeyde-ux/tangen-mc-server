@@ -1,0 +1,41 @@
+# Mac JDK-bundles (serveren bruker system-Java på VPS-en)
+jdk-21/
+jdk-25/
+
+# Paper runtime (opprettes på nytt ved første kjøring)
+libraries/
+versions/
+cache/
+logs/
+console.log
+.paper/
+Xx_DragonSlayer12_xX/session.lock
+
+# Sikkerhetskopier og cache-filer
+*.dat_old
+*.backup-*
+plugins/WorldEdit/.archive-unpack/
+plugins/spark/tmp/
+plugins/spark/tmp-client/
+plugins/LuckPerms/luckperms-h2-v2.trace.db
+plugins/LuckPerms/translations/
+
+# Kompilerte klasser / bygde artefakter (kildekoden ligger i build/…/src)
+build/out/
+build/betterstats/out/
+build/betterstats/TangenStats.jar
+
+# Store teksturpakkefiler (pakken hentes fra offentlig HTTPS-lenke)
+PureBDcraft_256x_MC262.zip
+PureBDcraft_512x_MC262.zip
+minecraft.png
+
+# Ubrukte/disablerte plugins
+plugins/EssentialsX.jar.bak
+plugins/disabled/
+
+# macOS
+.DS_Store
+
+# Git
+.git/

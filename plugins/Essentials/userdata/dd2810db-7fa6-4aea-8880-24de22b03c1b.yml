@@ -1,0 +1,31 @@
+teleportenabled: true
+teleportauto: false
+godmode: false
+flymode: false
+muted: false
+jailed: false
+ip-address: 127.0.0.1
+afk: false
+socialspy: false
+npc: false
+powertoolsenabled: true
+accepting-pay: true
+baltop-exempt: false
+timestamps:
+  lastteleport: 0
+  lastheal: 0
+  mute: 0
+  jail: 0
+  onlinejail: 0
+  logout: 1789369341145
+  login: 1789368579116
+money: '0'
+last-account-name: K4cc
+logoutlocation:
+  world: 0fcc960f-f2da-44b5-ad97-e213e44a6f01
+  world-name: Xx_DragonSlayer12_xX
+  x: 126.10391776510654
+  y: 65.5
+  z: -109.08301716344556
+  yaw: -114.44998168945312
+  pitch: 2.2500009536743164
