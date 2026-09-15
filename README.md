@@ -32,7 +32,7 @@ Slik flytter du serveren til en ekte maskin med egen IP (ingen tunneling nødven
    ```bash
    git clone <repo-url> ~/tangen-mc-server && cd ~/tangen-mc-server
    ```
-2. **Kjør oppsettet** (installerer Java 21 + åpner port 25565 i ufw):
+2. **Kjør oppsettet** (installerer Java 25 + åpner port 25565 i ufw):
    ```bash
    ./setup-oracle.sh
    ```

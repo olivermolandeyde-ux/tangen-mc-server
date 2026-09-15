@@ -1,6 +1,6 @@
 #!/bin/bash
 # Starter serveren på Linux/VPS (Oracle Cloud Ubuntu).
-# Krever: java 21+ installert («setup-oracle.sh» gjør det).
+# Krever: Java 25 installert («setup-oracle.sh» gjør det).
 # NB: start.sh (Mac) og start-vps.sh (Linux) ligger ved siden av hverandre –
 #     kjør kun den som passer OS-et.
 cd "$(dirname "$0")"

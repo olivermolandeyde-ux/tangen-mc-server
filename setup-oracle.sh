@@ -1,7 +1,7 @@
 #!/bin/bash
 # Kjør én gang på Oracle Cloud Ubuntu VPS-en FØR første serverstart.
-# Installerer Java 21 (Paper 26.2 trenger 21+), åpner port 25565 i ufw
-# og gir eieren tilgang til servermappa.
+# Installerer Java 25 (Temurin/Adoptium – Paper 26.2 krever 25+),
+# åpner port 25565 i ufw og viser ingress-regelen som må settes i Oracle.
 set -e
 
 if [ "$(uname)" = "Darwin" ]; then
@@ -9,15 +9,26 @@ if [ "$(uname)" = "Darwin" ]; then
     exit 1
 fi
 
-echo "=== 1/3 Installerer OpenJDK 21 headless ==="
-sudo apt-get update
-sudo apt-get install -y openjdk-21-jre-headless ufw
+CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME")
 
-echo "=== 2/3 Åpner port 25565 i ufw ==="
+echo "=== 1/4 Installerer forutsetninger og Temurin Java 25 ==="
+sudo apt-get update
+sudo apt-get install -y wget gpg ufw
+wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public \
+    | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/adoptium.gpg
+echo "deb https://packages.adoptium.net/artifactory/deb $CODENAME main" \
+    | sudo tee /etc/apt/sources.list.d/adoptium.list
+sudo apt-get update
+sudo apt-get install -y temurin-25-jre
+
+echo "=== 2/4 Velger Java 25 som standard ==="
+sudo update-alternatives --set java /usr/lib/jvm/temurin-25-jre-amd64/bin/java 2>/dev/null || true
+
+echo "=== 3/4 Åpner port 25565 i ufw ==="
 sudo ufw allow 25565/tcp
 sudo ufw --force enable
 
-echo "=== 3/3 Sjekker Java ==="
+echo "=== 4/4 Sjekker Java ==="
 java -version
 
 echo
