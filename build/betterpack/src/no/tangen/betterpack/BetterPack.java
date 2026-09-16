@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -36,6 +38,33 @@ public final class BetterPack extends JavaPlugin implements Listener {
         loadOptedOut();
         Bukkit.getPluginManager().registerEvents(this, this);
         getLogger().info("BetterPack aktivert - sender pakke etter join (aldri tvunget).");
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("Kun spillere kan endre teksturpakken.");
+            return true;
+        }
+        boolean enable;
+        if (args.length == 0) {
+            enable = !optedOut.contains(player.getUniqueId());
+        } else {
+            String mode = args[0].toLowerCase();
+            enable = mode.equals("on") || mode.equals("paa") || mode.equals("på");
+        }
+        if (enable) {
+            optedOut.remove(player.getUniqueId());
+            saveOptedOut();
+            player.setResourcePack(url, hash, prompt, false);
+            player.sendMessage("§aTeksturpakken er på for deg. Hvis du vil ta den av: /texturepack off");
+        } else {
+            optedOut.add(player.getUniqueId());
+            saveOptedOut();
+            player.removeResourcePacks();
+            player.sendMessage("§aTeksturpakken er av og blir ikke sendt til deg igjen. For å slå den på: /texturepack on");
+        }
+        return true;
     }
 
     @EventHandler

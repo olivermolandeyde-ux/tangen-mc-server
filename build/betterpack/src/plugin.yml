@@ -1,5 +1,15 @@
 name: BetterPack
 main: no.tangen.betterpack.BetterPack
-version: 1.1
+version: 1.2
 api-version: "1.21"
-description: Sender teksturpakke-sporsmaal etter join; spillere kan avslaa og ta pakken av.
+description: Sender teksturpakke-sporsmaal etter join; spillere kan avslaa, ta pakken av og slaa den pa igjen selv.
+commands:
+  texturepack:
+    description: Slå teksturpakken på eller av
+    usage: /texturepack <on|off>
+    permission: betterpack.use
+    aliases: [pack]
+permissions:
+  betterpack.use:
+    description: Kan endre egen teksturpakke
+    default: true
