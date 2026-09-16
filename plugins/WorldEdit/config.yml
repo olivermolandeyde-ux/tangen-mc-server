@@ -144,7 +144,7 @@ calculation:
 debugging:
     trace-unflushed-sessions: false
 
-wand-item: minecraft:wooden_axe
+wand-item: minecraft:paper
 shell-save-type:
 no-op-permissions: false
 debug: false

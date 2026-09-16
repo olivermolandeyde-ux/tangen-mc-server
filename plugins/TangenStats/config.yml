@@ -24,3 +24,8 @@ holograms:
   - '&f/rtp = random teleport /sethome "navnet" = hjemmet ditt /topp og /stats = leaderboard
     tpa tp = teleporter til noen /spawn = komme tilbake til spawn dette er di viktigste
     kommandoene resten finner du med /help'
+
+anti-radar:
+  # Skjul spillere fra kart/minimap og gjør dem usynlige utenfor denne avstanden.
+  enabled: true
+  distance: 64

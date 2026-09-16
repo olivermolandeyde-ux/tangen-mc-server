@@ -652,7 +652,7 @@ tree-command-range-limit: 300
 
 # Should Essentials keep track of a player's previous location for /back in the teleport listener?
 # If you set this to true, any plugin that uses teleport will have the previous location registered.
-register-back-in-listener: false
+register-back-in-listener: true
 
 # The delay, in seconds, before people can cause attack damage after logging in.
 # This prevents players from exploiting the temporary invulnerability they receive upon joining.

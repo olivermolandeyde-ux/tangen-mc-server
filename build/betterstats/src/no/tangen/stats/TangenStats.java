@@ -66,6 +66,8 @@ import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerChatEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -132,7 +134,7 @@ public final class TangenStats extends JavaPlugin implements Listener {
                     "essentials.homes", "essentials.rtp"),
             Role.ELEV, List.of(
                     "essentials.spawn", "essentials.sethome", "essentials.home", "essentials.delhome",
-                    "essentials.homes", "essentials.rtp"));
+                    "essentials.homes", "essentials.rtp", "essentials.back", "essentials.back.ondeath"));
 
     private static final Map<Role, List<String>> ROLE_DENY = Map.of(
             Role.OWNER, List.of("essentials.keepinv"));
@@ -143,6 +145,14 @@ public final class TangenStats extends JavaPlugin implements Listener {
     private static final String COLORS = "0123456789abcdef";
 
     private final Map<UUID, String> sidebarSig = new HashMap<>();
+
+    private boolean antiRadarEnabled = true;
+    private int antiRadarDistance = 64;
+    private final Map<UUID, Set<UUID>> hiddenFrom = new HashMap<>();
+
+    private final Map<String, TeamData> teams = new HashMap<>();
+    private final Map<UUID, Boolean> teamChatMode = new HashMap<>();
+    private File teamsFile;
 
     private boolean treeFallEnabled = true;
 
@@ -182,6 +192,10 @@ public final class TangenStats extends JavaPlugin implements Listener {
         treeFallEnabled = getConfig().getBoolean("tree-fall.enabled", true);
         loadSafeZone();
         loadHolograms();
+        antiRadarEnabled = getConfig().getBoolean("anti-radar.enabled", true);
+        antiRadarDistance = getConfig().getInt("anti-radar.distance", 64);
+        teamsFile = new File(getDataFolder(), "teams.yml");
+        loadTeams();
 
         statsFile = new File(getDataFolder(), "stats.yml");
         stats = YamlConfiguration.loadConfiguration(statsFile);
@@ -201,6 +215,8 @@ public final class TangenStats extends JavaPlugin implements Listener {
         getCommand("rtp").setExecutor(this);
         getCommand("spawn").setExecutor(this);
         getCommand("hologram").setExecutor(this);
+        getCommand("team").setExecutor(this);
+        getCommand("createteam").setExecutor(this);
         getCommand("role").setTabCompleter((s, c, a, l) -> {
             if (l.length == 1) {
                 return List.of("give");
@@ -218,6 +234,31 @@ public final class TangenStats extends JavaPlugin implements Listener {
             return List.of();
         });
 
+        getCommand("team").setTabCompleter((sender, command, alias, args) -> {
+            if (args.length == 1) {
+                return List.of("add", "remove", "leave", "disband", "list", "info", "chat");
+            }
+            if (args.length == 2) {
+                String sub = args[0].toLowerCase();
+                if (sub.equals("add") || sub.equals("remove")) {
+                    List<String> names = new ArrayList<>();
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        names.add(p.getName());
+                    }
+                    return names;
+                }
+                if (sub.equals("info")) {
+                    return new ArrayList<>(teams.keySet());
+                }
+                if (sub.equals("chat")) {
+                    return List.of("on", "off", "toggle");
+                }
+            }
+            return List.of();
+        });
+
+        getCommand("createteam").setTabCompleter((sender, command, alias, args) -> List.of());
+
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 updateSidebar(p);
@@ -227,6 +268,9 @@ public final class TangenStats extends JavaPlugin implements Listener {
         }, 60L, 60L);
 
         Bukkit.getScheduler().runTaskTimer(this, this::evictMobsFromZone, 40L, 20L);
+        if (antiRadarEnabled) {
+            Bukkit.getScheduler().runTaskTimer(this, this::updateVisibility, 40L, 20L);
+        }
 
         getLogger().info("TangenStats aktivert - sidepanel, tab-lederboard og roller klare.");
     }
@@ -584,13 +628,39 @@ public final class TangenStats extends JavaPlugin implements Listener {
         rememberName(p);
         ensureElevOnJoin(p.getUniqueId());
         Bukkit.getScheduler().runTaskLater(this, () -> {
-            if (p.isOnline()) {
-                updateSidebar(p);
-                updateTab(p);
-                updateListName(p);
-                refreshTabForAll();
-            }
+                if (p.isOnline()) {
+                    updateSidebar(p);
+                    updateTab(p);
+                    updateListName(p);
+                    refreshTabForAll();
+                    updateVisibility();
+                }
         }, 20L);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        UUID uid = event.getPlayer().getUniqueId();
+        hiddenFrom.remove(uid);
+        for (Set<UUID> s : hiddenFrom.values()) {
+            s.remove(uid);
+        }
+        teamChatMode.remove(uid);
+    }
+
+    @EventHandler
+    public void onChat(PlayerChatEvent event) {
+        Player p = event.getPlayer();
+        String msg = event.getMessage();
+        if (msg.startsWith("!")) {
+            event.setCancelled(true);
+            broadcastTeam(p, msg.substring(1));
+            return;
+        }
+        if (Boolean.TRUE.equals(teamChatMode.get(p.getUniqueId()))) {
+            event.setCancelled(true);
+            broadcastTeam(p, msg);
+        }
     }
 
     @EventHandler
@@ -624,10 +694,10 @@ public final class TangenStats extends JavaPlugin implements Listener {
         if (player.isSneaking()) {
             return;
         }
-        ItemStack tool = player.getInventory().getItemInMainHand();
-        if (tool.getType() != Material.NETHERITE_AXE) {
-            return;
-        }
+            ItemStack tool = player.getInventory().getItemInMainHand();
+            if (!isAxe(tool.getType())) {
+                return;
+            }
         Block block = event.getBlock();
         if (!isLog(block.getType())) {
             return;
@@ -665,7 +735,7 @@ public final class TangenStats extends JavaPlugin implements Listener {
         tool.damage(1, player);
         if (broke > 1) {
             player.giveExp(broke);
-            player.sendActionBar(toComponent(color("&7Netherite-øks felte &a" + broke + "&7 tømmerblokker.")));
+                player.sendActionBar(toComponent(color("&7Øksa felte &a" + broke + "&7 tømmerblokker.")));
         }
     }
 
@@ -1301,6 +1371,345 @@ public final class TangenStats extends JavaPlugin implements Listener {
     }
 
     // ------------------------------------------------------------------
+    // Team-data og hjelpemetoder
+    // ------------------------------------------------------------------
+
+    private static class TeamData {
+        final String name;
+        UUID leader;
+        final List<UUID> members = new ArrayList<>();
+        final String color;
+
+        TeamData(String name, UUID leader, String color) {
+            this.name = name;
+            this.leader = leader;
+            this.color = color;
+            members.add(leader);
+        }
+    }
+
+    private TeamData getTeamOf(UUID uuid) {
+        for (TeamData td : teams.values()) {
+            if (td.members.contains(uuid)) {
+                return td;
+            }
+        }
+        return null;
+    }
+
+    private void loadTeams() {
+        if (teamsFile == null || !teamsFile.exists()) {
+            return;
+        }
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(teamsFile);
+        ConfigurationSection sec = cfg.getConfigurationSection("teams");
+        if (sec == null) {
+            return;
+        }
+        for (String name : sec.getKeys(false)) {
+            ConfigurationSection s = sec.getConfigurationSection(name);
+            if (s == null) {
+                continue;
+            }
+            String leaderStr = s.getString("leader");
+            String color = s.getString("color", "&7");
+            UUID leader = leaderStr != null ? parseUuid(leaderStr) : null;
+            if (leader == null) {
+                continue;
+            }
+            TeamData td = new TeamData(name, leader, color);
+            td.members.clear();
+            for (String m : s.getStringList("members")) {
+                UUID uid = parseUuid(m);
+                if (uid != null) {
+                    td.members.add(uid);
+                }
+            }
+            teams.put(name.toLowerCase(), td);
+        }
+    }
+
+    private void saveTeams() {
+        if (teamsFile == null) {
+            return;
+        }
+        YamlConfiguration cfg = new YamlConfiguration();
+        for (TeamData td : teams.values()) {
+            ConfigurationSection s = cfg.createSection("teams." + td.name);
+            s.set("leader", td.leader.toString());
+            s.set("members", td.members.stream().map(UUID::toString).collect(Collectors.toList()));
+            s.set("color", td.color);
+        }
+        try {
+            cfg.save(teamsFile);
+        } catch (IOException e) {
+            getLogger().warning("Kunne ikke lagre teams.yml: " + e.getMessage());
+        }
+    }
+
+    private void updateVisibility() {
+        if (!antiRadarEnabled) {
+            return;
+        }
+        List<Player> online = new ArrayList<>(Bukkit.getOnlinePlayers());
+        for (Player viewer : online) {
+            Set<UUID> shouldHide = new HashSet<>();
+            for (Player target : online) {
+                if (viewer.equals(target)) {
+                    continue;
+                }
+                if (!viewer.getWorld().equals(target.getWorld())
+                        || viewer.getLocation().distanceSquared(target.getLocation()) > (double) antiRadarDistance * antiRadarDistance) {
+                    shouldHide.add(target.getUniqueId());
+                }
+            }
+            Set<UUID> currently = hiddenFrom.computeIfAbsent(viewer.getUniqueId(), k -> new HashSet<>());
+            for (UUID uid : shouldHide) {
+                if (!currently.contains(uid)) {
+                    Player target = Bukkit.getPlayer(uid);
+                    if (target != null) {
+                        viewer.hidePlayer(this, target);
+                        currently.add(uid);
+                    }
+                }
+            }
+            var iter = currently.iterator();
+            while (iter.hasNext()) {
+                UUID uid = iter.next();
+                if (!shouldHide.contains(uid)) {
+                    Player target = Bukkit.getPlayer(uid);
+                    if (target != null) {
+                        viewer.showPlayer(this, target);
+                    }
+                    iter.remove();
+                }
+            }
+        }
+    }
+
+    private void broadcastTeam(Player sender, String msg) {
+        TeamData td = getTeamOf(sender.getUniqueId());
+        if (td == null) {
+            sender.sendMessage(color("&cDu er ikke i noe team."));
+            return;
+        }
+        String formatted = color(td.color + "&l[Team] &r" + roleDisplay(sender) + " " + sender.getName() + ": &r" + msg);
+        Component comp = toComponent(formatted);
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (td.members.contains(p.getUniqueId())) {
+                p.sendMessage(comp);
+            }
+        }
+    }
+
+    private boolean isAxe(Material type) {
+        String name = type.name();
+        return name.endsWith("_AXE");
+    }
+
+    // ------------------------------------------------------------------
+    // Team-kommandoer
+    // ------------------------------------------------------------------
+
+    private void handleCreateTeam(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player p)) {
+            sender.sendMessage(color("&cKun spillere kan opprette team."));
+            return;
+        }
+        if (args.length < 1) {
+            sender.sendMessage(color("&cBruk: /createteam <teamnavn>"));
+            return;
+        }
+        String name = args[0];
+        if (name.length() > 24) {
+            sender.sendMessage(color("&cTeamnavnet er for langt (maks 24 tegn)."));
+            return;
+        }
+        if (getTeamOf(p.getUniqueId()) != null) {
+            sender.sendMessage(color("&cDu er allerede i et team. Forlat det først med /team leave."));
+            return;
+        }
+        if (teams.containsKey(name.toLowerCase())) {
+            sender.sendMessage(color("&cDet finnes allerede et team med det navnet."));
+            return;
+        }
+        String[] palette = {"&a", "&b", "&c", "&d", "&e", "&3", "&9", "&5"};
+        String colorCode = palette[teams.size() % palette.length];
+        TeamData td = new TeamData(name, p.getUniqueId(), colorCode);
+        teams.put(name.toLowerCase(), td);
+        saveTeams();
+        sender.sendMessage(color("&aTeamet &f" + name + "&a er opprettet!"));
+    }
+
+    private void handleTeam(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player p)) {
+            sender.sendMessage(color("&cKun spillere kan bruke /team."));
+            return;
+        }
+        if (args.length == 0) {
+            sender.sendMessage(color("&7Bruk: /team <add|remove|leave|disband|list|info|chat>"));
+            return;
+        }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "list" -> {
+                if (teams.isEmpty()) {
+                    sender.sendMessage(color("&7Ingen team."));
+                    return;
+                }
+                List<String> msg = new ArrayList<>();
+                msg.add(color("&b&lTeamliste:"));
+                for (TeamData td : teams.values()) {
+                    msg.add(color(td.color + td.name + " &7- &f" + td.members.size() + " medlemmer"));
+                }
+                sender.sendMessage(String.join("\n", msg));
+                return;
+            }
+            case "info" -> {
+                TeamData td = null;
+                if (args.length >= 2) {
+                    td = teams.get(args[1].toLowerCase());
+                } else {
+                    td = getTeamOf(p.getUniqueId());
+                }
+                if (td == null) {
+                    sender.sendMessage(color("&cTeamet ble ikke funnet."));
+                    return;
+                }
+                List<String> lines = new ArrayList<>();
+                lines.add(color(td.color + "&l" + td.name));
+                for (UUID uid : td.members) {
+                    Role r = roleOf(uid);
+                    String role = r != null ? r.display : "elev";
+                    lines.add(color("&7- " + role + " &f" + nameOf(uid) + (uid.equals(td.leader) ? " &e(Leder)" : "")));
+                }
+                sender.sendMessage(String.join("\n", lines));
+                return;
+            }
+            case "chat" -> {
+                if (args.length >= 2 && "on".equalsIgnoreCase(args[1])) {
+                    teamChatMode.put(p.getUniqueId(), true);
+                    sender.sendMessage(color("&aTeamchat slått på."));
+                    return;
+                }
+                if (args.length >= 2 && "off".equalsIgnoreCase(args[1])) {
+                    teamChatMode.put(p.getUniqueId(), false);
+                    sender.sendMessage(color("&7Teamchat slått av."));
+                    return;
+                }
+                boolean current = Boolean.TRUE.equals(teamChatMode.get(p.getUniqueId()));
+                teamChatMode.put(p.getUniqueId(), !current);
+                sender.sendMessage(color(current ? "&7Teamchat slått av." : "&aTeamchat slått på."));
+                return;
+            }
+            case "add" -> {
+                TeamData td = getTeamOf(p.getUniqueId());
+                if (td == null) {
+                    sender.sendMessage(color("&cDu er ikke i noe team."));
+                    return;
+                }
+                if (!td.leader.equals(p.getUniqueId())) {
+                    sender.sendMessage(color("&cBare ledere kan legge til medlemmer."));
+                    return;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage(color("&cBruk: /team add <spiller>"));
+                    return;
+                }
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    sender.sendMessage(color("&cSpilleren er ikke online."));
+                    return;
+                }
+                if (getTeamOf(target.getUniqueId()) != null) {
+                    sender.sendMessage(color("&cDen spilleren er allerede i et team."));
+                    return;
+                }
+                td.members.add(target.getUniqueId());
+                saveTeams();
+                sender.sendMessage(color("&a" + target.getName() + " ble lagt til i teamet."));
+                target.sendMessage(color(td.color + "&l[Team] &rDu ble lagt til i teamet &f" + td.name + "&r."));
+                return;
+            }
+            case "remove" -> {
+                TeamData td = getTeamOf(p.getUniqueId());
+                if (td == null) {
+                    sender.sendMessage(color("&cDu er ikke i noe team."));
+                    return;
+                }
+                if (!td.leader.equals(p.getUniqueId())) {
+                    sender.sendMessage(color("&cBare ledere kan fjerne medlemmer."));
+                    return;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage(color("&cBruk: /team remove <spiller>"));
+                    return;
+                }
+                UUID uid = findUuid(args[1]);
+                if (uid == null || !td.members.contains(uid)) {
+                    sender.sendMessage(color("&cFant ikke det medlemmet."));
+                    return;
+                }
+                if (uid.equals(td.leader)) {
+                    sender.sendMessage(color("&cDu kan ikke fjerne lederen. Bruk /team disband."));
+                    return;
+                }
+                td.members.remove(uid);
+                saveTeams();
+                Player target = Bukkit.getPlayer(uid);
+                String name = target != null ? target.getName() : args[1];
+                sender.sendMessage(color("&a" + name + " ble fjernet fra teamet."));
+                if (target != null) {
+                    target.sendMessage(color(td.color + "&l[Team] &rDu ble fjernet fra teamet &f" + td.name + "&r."));
+                }
+                return;
+            }
+            case "leave" -> {
+                TeamData td = getTeamOf(p.getUniqueId());
+                if (td == null) {
+                    sender.sendMessage(color("&cDu er ikke i noe team."));
+                    return;
+                }
+                if (td.leader.equals(p.getUniqueId())) {
+                    sender.sendMessage(color("&cLedere kan ikke forlate teamet. Bruk /team disband."));
+                    return;
+                }
+                td.members.remove(p.getUniqueId());
+                saveTeams();
+                sender.sendMessage(color("&aDu forlot teamet &f" + td.name + "&a."));
+                return;
+            }
+            case "disband" -> {
+                TeamData td = getTeamOf(p.getUniqueId());
+                if (td == null) {
+                    sender.sendMessage(color("&cDu er ikke i noe team."));
+                    return;
+                }
+                if (!td.leader.equals(p.getUniqueId())) {
+                    sender.sendMessage(color("&cBare ledere kan oppløse teamet."));
+                    return;
+                }
+                String teamName = td.name;
+                String teamColor = td.color;
+                List<UUID> membersCopy = new ArrayList<>(td.members);
+                teams.remove(td.name.toLowerCase());
+                saveTeams();
+                for (UUID uid : membersCopy) {
+                    Player member = Bukkit.getPlayer(uid);
+                    if (member != null) {
+                        member.sendMessage(color(teamColor + "&l[Team] &f" + teamName + " &rble oppløst."));
+                    }
+                }
+                sender.sendMessage(color("&aTeamet &f" + teamName + "&a ble oppløst."));
+                return;
+            }
+            default -> {
+                sender.sendMessage(color("&cUkjent teamkommando."));
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Kommandoer
     // ------------------------------------------------------------------
 
@@ -1467,6 +1876,14 @@ public final class TangenStats extends JavaPlugin implements Listener {
                     return true;
                 }
                 return handleZoneChange(p, args);
+            }
+            case "team" -> {
+                handleTeam(sender, args);
+                return true;
+            }
+            case "createteam" -> {
+                handleCreateTeam(sender, args);
+                return true;
             }
             default -> {
                 return false;

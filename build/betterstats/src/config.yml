@@ -12,3 +12,10 @@ safe-zone:
   enabled: true
   # Antall chunks per side (2 = 2x2 chunks = 4 chunks totalt)
   chunk-width: 2
+
+anti-radar:
+  # Skjul spillere fra kart/minimap og gjør dem usynlige utenfor denne avstanden.
+  # Sett enabled: false for å deaktivere.
+  enabled: true
+  # Avstand i blokker (kalkulert mot distanceSquared)
+  distance: 64

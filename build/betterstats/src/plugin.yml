@@ -1,9 +1,9 @@
 name: TangenStats
-version: 1.0
+version: 1.1
 main: no.tangen.stats.TangenStats
 api-version: 1.20
 depend: [LuckPerms]
-description: Sidepanel med draft/dødsfall-statistikk, toppliste og roller (owner/laerer/mod/elev).
+description: Sidepanel med drap/dødsfall-statistikk, toppliste, roller, anti-radar usynlighet og team-system.
 commands:
   topp:
     description: Viser topplista - flest drap
@@ -27,3 +27,9 @@ commands:
     description: Lag og styr hologrammer
     usage: /holo add <tekst> | addline <id> <tekst> | setline <id> <nr> <tekst> | removeline <id> <nr> | move <id> | remove <id> | list | clear
     aliases: [holo]
+  team:
+    description: Team administrasjon
+    usage: /team <add|remove|leave|disband|list|info|chat> [args]
+  createteam:
+    description: Opprett et nytt team
+    usage: /createteam <teamnavn>
