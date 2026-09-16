@@ -1,0 +1,5 @@
+name: BetterPack
+main: no.tangen.betterpack.BetterPack
+version: 1.1
+api-version: "1.21"
+description: Sender teksturpakke-sporsmaal etter join; spillere kan avslaa og ta pakken av.

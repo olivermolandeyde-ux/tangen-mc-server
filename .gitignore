@@ -24,6 +24,7 @@ plugins/LuckPerms/translations/
 build/out/
 build/betterstats/out/
 build/betterstats/TangenStats.jar
+build/betterpack/out/
 
 # Store teksturpakkefiler (pakken hentes fra offentlig HTTPS-lenke)
 PureBDcraft_256x_MC262.zip
