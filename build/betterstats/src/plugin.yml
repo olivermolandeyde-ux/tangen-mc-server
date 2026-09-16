@@ -1,5 +1,5 @@
 name: TangenStats
-version: 1.1
+version: 1.2
 main: no.tangen.stats.TangenStats
 api-version: 1.20
 depend: [LuckPerms]
@@ -33,3 +33,12 @@ commands:
   createteam:
     description: Opprett et nytt team
     usage: /createteam <teamnavn>
+  nightvision:
+    description: Skrur nattesyn på/av (vedvarer til du slår det av)
+    usage: /nightvision
+    aliases: [nv]
+    permission: tangen.stats.nightvision
+permissions:
+  tangen.stats.nightvision:
+    description: Kan bruke /nightvision
+    default: true

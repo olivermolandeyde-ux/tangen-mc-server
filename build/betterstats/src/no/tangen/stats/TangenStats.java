@@ -71,6 +71,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -154,6 +156,9 @@ public final class TangenStats extends JavaPlugin implements Listener {
     private final Map<UUID, Boolean> teamChatMode = new HashMap<>();
     private File teamsFile;
 
+    private final Set<UUID> nightVision = new HashSet<>();
+    private File nightVisionFile;
+
     private boolean treeFallEnabled = true;
 
     private boolean safeZoneEnabled = true;
@@ -197,6 +202,9 @@ public final class TangenStats extends JavaPlugin implements Listener {
         teamsFile = new File(getDataFolder(), "teams.yml");
         loadTeams();
 
+        nightVisionFile = new File(getDataFolder(), "nightvision.yml");
+        loadNightVision();
+
         statsFile = new File(getDataFolder(), "stats.yml");
         stats = YamlConfiguration.loadConfiguration(statsFile);
         if (!stats.isConfigurationSection("players")) {
@@ -217,6 +225,7 @@ public final class TangenStats extends JavaPlugin implements Listener {
         getCommand("hologram").setExecutor(this);
         getCommand("team").setExecutor(this);
         getCommand("createteam").setExecutor(this);
+        getCommand("nightvision").setExecutor(this);
         getCommand("role").setTabCompleter((s, c, a, l) -> {
             if (l.length == 1) {
                 return List.of("give");
@@ -634,6 +643,9 @@ public final class TangenStats extends JavaPlugin implements Listener {
                     updateListName(p);
                     refreshTabForAll();
                     updateVisibility();
+                    if (nightVision.contains(p.getUniqueId())) {
+                        applyNightVision(p);
+                    }
                 }
         }, 20L);
     }
@@ -1447,6 +1459,52 @@ public final class TangenStats extends JavaPlugin implements Listener {
         }
     }
 
+    private void loadNightVision() {
+        if (nightVisionFile == null || !nightVisionFile.exists()) {
+            return;
+        }
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(nightVisionFile);
+        for (String value : cfg.getStringList("uuids")) {
+            try {
+                nightVision.add(UUID.fromString(value));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+    }
+
+    private void saveNightVision() {
+        if (nightVisionFile == null) {
+            return;
+        }
+        YamlConfiguration cfg = new YamlConfiguration();
+        cfg.set("uuids", nightVision.stream().map(UUID::toString).toList());
+        try {
+            cfg.save(nightVisionFile);
+        } catch (IOException e) {
+            getLogger().warning("Kunne ikke lagre nightvision.yml: " + e.getMessage());
+        }
+    }
+
+    private void toggleNightVision(Player p) {
+        UUID uid = p.getUniqueId();
+        if (nightVision.contains(uid)) {
+            nightVision.remove(uid);
+            saveNightVision();
+            p.removePotionEffect(PotionEffectType.NIGHT_VISION);
+            p.sendMessage(color("&cNattesyn er av. Skriv /nightvision igjen for å slå på."));
+        } else {
+            nightVision.add(uid);
+            saveNightVision();
+            applyNightVision(p);
+            p.sendMessage(color("&aNattesyn er på. Skriv /nightvision igjen for å slå av."));
+        }
+    }
+
+    private void applyNightVision(Player p) {
+        p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,
+                Integer.MAX_VALUE, 1, false, false, true));
+    }
+
     private void updateVisibility() {
         if (!antiRadarEnabled) {
             return;
@@ -1756,6 +1814,14 @@ public final class TangenStats extends JavaPlugin implements Listener {
                         color("&aDrap: &f" + k + "   &cD\u00F8dsfall: &f" + d
                                 + "   &6D\u00F8d/drap: &f" + String.format("%.1f", kd)),
                         color("&7Rolle: ") + role));
+                return true;
+            }
+            case "nightvision" -> {
+                if (!(sender instanceof Player p)) {
+                    sender.sendMessage("Kun spillere kan bruke /nightvision.");
+                    return true;
+                }
+                toggleNightVision(p);
                 return true;
             }
             case "topp" -> {
