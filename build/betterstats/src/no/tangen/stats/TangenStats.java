@@ -135,6 +135,9 @@ public final class TangenStats extends JavaPlugin implements Listener {
                     "essentials.spawn", "essentials.sethome", "essentials.home", "essentials.delhome",
                     "essentials.homes", "essentials.rtp"),
             Role.ELEV, List.of(
+                    "minecraft.command.tp", "essentials.tp", "essentials.tp.self", "essentials.tp.others",
+                    "essentials.tpa", "essentials.tpahere", "essentials.tpaccept", "essentials.tpdeny",
+                    "essentials.tpacancel",
                     "essentials.spawn", "essentials.sethome", "essentials.home", "essentials.delhome",
                     "essentials.homes", "essentials.rtp", "essentials.back", "essentials.back.ondeath"));
 
