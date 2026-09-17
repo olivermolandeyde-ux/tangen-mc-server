@@ -139,9 +139,9 @@ world-settings:
     mob-spawn-range: 8
     thunder-chance: 100000
     entity-tracking-range:
-      # players: 0 = spillerenheter sendes aldri til klienten (usynlig på kart/minikap i verden).
-      # Tab-lista viser likevel alle online. Skal man se hverandre fysisk igjen, øk denne (f.eks. 32).
-      players: 0
+      # STABILISERT: 64 = normal spil (som standard). Hel-blokk-prøver settes ned igjen
+      # når serveren er bekreftet stabil. players: 0 skjuler alle slik at tab er eneste kilde.
+      players: 64
       animals: 72
       monsters: 72
       misc: 72
