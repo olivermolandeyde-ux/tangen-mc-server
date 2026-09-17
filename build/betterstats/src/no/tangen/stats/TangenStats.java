@@ -84,6 +84,7 @@ public final class TangenStats extends JavaPlugin implements Listener {
         OWNER("owner", "\u00A79Owner", 1000, "&9[Owner] "),
         LAERER("laerer", "\u00A7eL\u00E6rer", 900, "&e[L\u00E6rer] "),
         MOD("mod", "\u00A7cModerator", 800, "&c[Moderator] "),
+        BUILDER("builder", "\u00A73Bygger", 600, "&3[Bygger] "),
         ELEV("elev", "\u00A7aElev", 100, "&aElev ");
 
         final String group;
@@ -139,7 +140,24 @@ public final class TangenStats extends JavaPlugin implements Listener {
                     "essentials.tpa", "essentials.tpahere", "essentials.tpaccept", "essentials.tpdeny",
                     "essentials.tpacancel",
                     "essentials.spawn", "essentials.sethome", "essentials.home", "essentials.delhome",
-                    "essentials.homes", "essentials.rtp", "essentials.back", "essentials.back.ondeath"));
+                    "essentials.homes", "essentials.rtp", "essentials.back", "essentials.back.ondeath"),
+            Role.BUILDER, List.of(
+                    "minecraft.command.tp", "essentials.tp", "essentials.tp.self", "essentials.tp.others",
+                    "essentials.tpa", "essentials.tpahere", "essentials.tpaccept", "essentials.tpdeny",
+                    "essentials.tpacancel",
+                    "essentials.spawn", "essentials.sethome", "essentials.home", "essentials.delhome",
+                    "essentials.homes", "essentials.rtp", "essentials.back", "essentials.back.ondeath",
+                    "essentials.gamemode", "essentials.gamemode.creative", "essentials.gamemode.survival",
+                    "essentials.gamemode.adventure", "essentials.gamemode.spectator",
+                    "minecraft.command.gamemode", "minecraft.command.toggle-downfall",
+                    "essentials.build", "essentials.hat",
+                    "tangen.stats.hologram",
+                    "worldedit.wand", "worldedit.selection.*", "worldedit.region.*",
+                    "worldedit.copypaste", "worldedit.clipboard.*", "worldedit.brush.*", "worldedit.schematic.*",
+                    "worldguard.selection.*", "worldguard.region.create", "worldguard.region.remove",
+                    "worldguard.region.claim", "worldguard.region.unclaim", "worldguard.region.redefine",
+                    "worldguard.region.select", "worldguard.region.wand", "worldguard.region.info",
+                    "worldguard.region.list", "worldguard.region.flag.flags.*", "worldguard.region.flag.regions.*"));
 
     private static final Map<Role, List<String>> ROLE_DENY = Map.of(
             Role.OWNER, List.of("essentials.keepinv"));
@@ -370,7 +388,8 @@ public final class TangenStats extends JavaPlugin implements Listener {
                     .collect(Collectors.toSet());
             boolean hasElev = groups.contains("elev");
             boolean hasOtherRole = groups.stream()
-                    .anyMatch(name -> name.equals("owner") || name.equals("laerer") || name.equals("mod"));
+                    .anyMatch(name -> name.equals("owner") || name.equals("laerer") || name.equals("mod")
+                            || name.equals("builder"));
             boolean primaryIsOurs = Role.byGroup(user.getPrimaryGroup()) != null;
 
             boolean changed = false;
@@ -1855,7 +1874,7 @@ refreshTabForAll();
                 }
                 if (args.length >= 1 && "give".equalsIgnoreCase(args[0])) {
                     if (args.length < 3) {
-                        sender.sendMessage(color("&cBruk: /role give <spiller> <owner|laerer|mod|elev>"));
+                        sender.sendMessage(color("&cBruk: /role give <spiller> <owner|laerer|mod|builder|elev>"));
                         return true;
                     }
                     boolean allowed = !(sender instanceof Player) || sender.hasPermission(PERM_ROLE) || sender.isOp();
