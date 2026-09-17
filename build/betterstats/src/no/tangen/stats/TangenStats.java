@@ -162,6 +162,9 @@ public final class TangenStats extends JavaPlugin implements Listener {
     private final Set<UUID> nightVision = new HashSet<>();
     private File nightVisionFile;
 
+    private final Set<UUID> starterGiven = new HashSet<>();
+    private File starterFile;
+
     private boolean treeFallEnabled = true;
 
     private boolean safeZoneEnabled = true;
@@ -207,6 +210,9 @@ public final class TangenStats extends JavaPlugin implements Listener {
 
         nightVisionFile = new File(getDataFolder(), "nightvision.yml");
         loadNightVision();
+
+        starterFile = new File(getDataFolder(), "starter.yml");
+        loadStarter();
 
         statsFile = new File(getDataFolder(), "stats.yml");
         stats = YamlConfiguration.loadConfiguration(statsFile);
@@ -649,6 +655,7 @@ public final class TangenStats extends JavaPlugin implements Listener {
                     if (nightVision.contains(p.getUniqueId())) {
                         applyNightVision(p);
                     }
+                    giveStarterKit(p);
                 }
         }, 20L);
     }
@@ -1506,6 +1513,48 @@ public final class TangenStats extends JavaPlugin implements Listener {
     private void applyNightVision(Player p) {
         p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,
                 Integer.MAX_VALUE, 1, false, false, true));
+    }
+
+    private void loadStarter() {
+        if (starterFile == null || !starterFile.exists()) {
+            return;
+        }
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(starterFile);
+        for (String value : cfg.getStringList("uuids")) {
+            try {
+                starterGiven.add(UUID.fromString(value));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+    }
+
+    private void saveStarter() {
+        if (starterFile == null) {
+            return;
+        }
+        YamlConfiguration cfg = new YamlConfiguration();
+        cfg.set("uuids", starterGiven.stream().map(UUID::toString).toList());
+        try {
+            cfg.save(starterFile);
+        } catch (IOException e) {
+            getLogger().warning("Kunne ikke lagre starter.yml: " + e.getMessage());
+        }
+    }
+
+    private void giveStarterKit(Player p) {
+        UUID uid = p.getUniqueId();
+        if (starterGiven.contains(uid)) {
+            return;
+        }
+        ItemStack meat = new ItemStack(Material.COOKED_BEEF, 32);
+        if (p.getInventory().firstEmpty() != -1) {
+            p.getInventory().addItem(meat);
+        } else {
+            p.getWorld().dropItem(p.getLocation(), meat);
+        }
+        starterGiven.add(uid);
+        saveStarter();
+        p.sendMessage(color("&aDu fikk 32 kokt biff som startmat!"));
     }
 
     private void updateVisibility() {
