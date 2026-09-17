@@ -19,7 +19,8 @@ settings:
   sample-count: 12
   player-shuffle: 0
   user-cache-size: 1000
-  timeout-time: 60
+  # Høyere timeout = færre tilfeldige kast (skolewifi dropper pakker av og til)
+  timeout-time: 120
   restart-on-crash: true
   restart-script: ./start.sh
   netty-threads: 4
