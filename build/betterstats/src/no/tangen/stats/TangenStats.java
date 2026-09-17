@@ -151,10 +151,6 @@ public final class TangenStats extends JavaPlugin implements Listener {
 
     private final Map<UUID, String> sidebarSig = new HashMap<>();
 
-    private boolean antiRadarEnabled = true;
-    private int antiRadarDistance = 64;
-    private final Map<UUID, Set<UUID>> hiddenFrom = new HashMap<>();
-
     private final Map<String, TeamData> teams = new HashMap<>();
     private final Map<UUID, Boolean> teamChatMode = new HashMap<>();
     private File teamsFile;
@@ -203,8 +199,6 @@ public final class TangenStats extends JavaPlugin implements Listener {
         treeFallEnabled = getConfig().getBoolean("tree-fall.enabled", true);
         loadSafeZone();
         loadHolograms();
-        antiRadarEnabled = getConfig().getBoolean("anti-radar.enabled", true);
-        antiRadarDistance = getConfig().getInt("anti-radar.distance", 64);
         teamsFile = new File(getDataFolder(), "teams.yml");
         loadTeams();
 
@@ -286,9 +280,6 @@ public final class TangenStats extends JavaPlugin implements Listener {
         }, 60L, 60L);
 
         Bukkit.getScheduler().runTaskTimer(this, this::evictMobsFromZone, 40L, 20L);
-        if (antiRadarEnabled) {
-            Bukkit.getScheduler().runTaskTimer(this, this::updateVisibility, 40L, 20L);
-        }
 
         getLogger().info("TangenStats aktivert - sidepanel, tab-lederboard og roller klare.");
     }
@@ -650,8 +641,7 @@ public final class TangenStats extends JavaPlugin implements Listener {
                     updateSidebar(p);
                     updateTab(p);
                     updateListName(p);
-                    refreshTabForAll();
-                    updateVisibility();
+refreshTabForAll();
                     if (nightVision.contains(p.getUniqueId())) {
                         applyNightVision(p);
                     }
@@ -663,10 +653,6 @@ public final class TangenStats extends JavaPlugin implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         UUID uid = event.getPlayer().getUniqueId();
-        hiddenFrom.remove(uid);
-        for (Set<UUID> s : hiddenFrom.values()) {
-            s.remove(uid);
-        }
         teamChatMode.remove(uid);
     }
 
@@ -1555,46 +1541,6 @@ public final class TangenStats extends JavaPlugin implements Listener {
         starterGiven.add(uid);
         saveStarter();
         p.sendMessage(color("&aDu fikk 32 kokt biff som startmat!"));
-    }
-
-    private void updateVisibility() {
-        if (!antiRadarEnabled) {
-            return;
-        }
-        List<Player> online = new ArrayList<>(Bukkit.getOnlinePlayers());
-        for (Player viewer : online) {
-            Set<UUID> shouldHide = new HashSet<>();
-            for (Player target : online) {
-                if (viewer.equals(target)) {
-                    continue;
-                }
-                if (!viewer.getWorld().equals(target.getWorld())
-                        || viewer.getLocation().distanceSquared(target.getLocation()) > (double) antiRadarDistance * antiRadarDistance) {
-                    shouldHide.add(target.getUniqueId());
-                }
-            }
-            Set<UUID> currently = hiddenFrom.computeIfAbsent(viewer.getUniqueId(), k -> new HashSet<>());
-            for (UUID uid : shouldHide) {
-                if (!currently.contains(uid)) {
-                    Player target = Bukkit.getPlayer(uid);
-                    if (target != null) {
-                        viewer.hideEntity(this, target);
-                        currently.add(uid);
-                    }
-                }
-            }
-            var iter = currently.iterator();
-            while (iter.hasNext()) {
-                UUID uid = iter.next();
-                if (!shouldHide.contains(uid)) {
-                    Player target = Bukkit.getPlayer(uid);
-                    if (target != null) {
-                        viewer.showEntity(this, target);
-                    }
-                    iter.remove();
-                }
-            }
-        }
     }
 
     private void broadcastTeam(Player sender, String msg) {

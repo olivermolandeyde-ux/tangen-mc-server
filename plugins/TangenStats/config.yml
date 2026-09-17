@@ -29,3 +29,5 @@ anti-radar:
   # Skjul spillere fra kart/minimap og gjør dem usynlige utenfor denne avstanden.
   enabled: true
   distance: 64
+  # Merk: plugin-skjulekoden er fjernet; avstand styres nå av
+  # spigot.yml -> entity-tracking-range.players (64) sånn at tab-en viser alle.
