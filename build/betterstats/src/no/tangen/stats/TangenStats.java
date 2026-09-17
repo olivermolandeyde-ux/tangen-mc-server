@@ -1578,7 +1578,7 @@ public final class TangenStats extends JavaPlugin implements Listener {
                 if (!currently.contains(uid)) {
                     Player target = Bukkit.getPlayer(uid);
                     if (target != null) {
-                        viewer.hidePlayer(this, target);
+                        viewer.hideEntity(this, target);
                         currently.add(uid);
                     }
                 }
@@ -1589,7 +1589,7 @@ public final class TangenStats extends JavaPlugin implements Listener {
                 if (!shouldHide.contains(uid)) {
                     Player target = Bukkit.getPlayer(uid);
                     if (target != null) {
-                        viewer.showPlayer(this, target);
+                        viewer.showEntity(this, target);
                     }
                     iter.remove();
                 }
