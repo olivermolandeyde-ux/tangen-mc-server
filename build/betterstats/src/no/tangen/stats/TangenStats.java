@@ -707,7 +707,7 @@ public final class TangenStats extends JavaPlugin implements Listener {
             return;
         }
             ItemStack tool = player.getInventory().getItemInMainHand();
-            if (!isAxe(tool.getType())) {
+            if (tool.getType() != Material.NETHERITE_AXE) {
                 return;
             }
         Block block = event.getBlock();
@@ -1558,11 +1558,6 @@ public final class TangenStats extends JavaPlugin implements Listener {
                 p.sendMessage(comp);
             }
         }
-    }
-
-    private boolean isAxe(Material type) {
-        String name = type.name();
-        return name.endsWith("_AXE");
     }
 
     // ------------------------------------------------------------------
